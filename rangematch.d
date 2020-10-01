@@ -120,7 +120,7 @@ unittest{
 	assert(classify(vec2(100,101))==-1);
 }
 mixin template rangematchsetup(input,output){
-	alias match=matcher!(input,output);
+	alias pattern=matcher!(input,output);
 	static foreach(def;definitions!input){
 		mixin("enum "~def.name~"=rangeof!(def.T)();");
 	}

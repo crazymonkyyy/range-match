@@ -1,32 +1,35 @@
 ## range-match
-A lazy and narrow pattern match but is roughly the best syntax I believe is possible in D. If you only need compares such as `1<x<3` and can deal with this being impliented a touch wonky it may work for you. Should be compadible with any sane opCmp.
 
-### intended use
+Range match, is a partial implementation of pattern matching. Focused on cleanly allowing complex "stuctured" programming. The main detail is that its requires the logic to be written using ranges such as `1<=x<=3`. Replacing particularly nasty if-else chains. 
+
+## Example
+
+Suppose you have the following state space:
+
+![shenzhenoi](shenzhenio.png)
+
+This can be impliented as:
+
 ```d
-	struct vec2{
-		int x;
-		int y;
-	}
-	int classify(vec2 foo){
-	import rangematch;
-		mixin rangematchsetup!(vec2,int);
-		return foo|
-		match(    x=42 ,    y    , 100)|
-			match(10<<x<<30,20<<y<<40,1020)|
-			match(50<<x<<70, 0<<y<<20,5000)|
-			match(50<<x<<70,20<<y<<40,5020)|
-			match(100<<x   ,    y<<99,1000)|
-			match(     x=1 ,    y=1  ,  42)|
-			match(x,y,-1);
-	}
-	assert(classify(vec2(42,10))== 100);
-	assert(classify(vec2(42,20))== 100);
-	assert(classify(vec2(42,30))== 100);
-	assert(classify(vec2(20,30))==1020);
-	assert(classify(vec2(60,10))==5000);
-	assert(classify(vec2(1,1  ))==  42);
-	assert(classify(vec2(99,0 ))==  -1);
-	assert(classify(vec2(100,99))==1000);
-	assert(classify(vec2(60,21))==5020);
-	assert(classify(vec2(100,101))==-1);
+int fluxstate(vec2 postion){
+  import rangematch;
+  mixin rangematchsetup!(vec2,int);
+  return postion |
+    pattern(40<<x<<59,40<<y<<79,50)|
+    pattern(59<<x<<79,40<<y<<79,80)|
+    pattern(20<<x<<59,    y    , 0)|
+    pattern(    x    ,    y    ,30);
+}
 ```
+
+## notes
+
+* rangematchsetup takes an input and output type to define several aliases and pattern
+* Postion is a vec2, the "input" type given to rangematch setup. 
+* x and y are aliases to rangeof!ints(can be different) 
+* left<<, *and* right<< are op overloads that mean "I'm greater/lesser then or equal" to so 40<=postion.x && postion.x<=59
+* patterns take rangeof! sub members of the input type, *in the order they are defined by the struct* and an output
+* pattern | takes an input from the left, if it "matches" it passes its output, otherwise it trys to pass its it to the next pattern, if it fails it throws an runtime assert.
+* you can leave a untouch rangof, define one hand or simply set it equal(using =)
+* see poker.d for a more complex example.
+
